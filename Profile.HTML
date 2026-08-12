@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Profile — EduVerse AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="ev-app">
+<div class="ev-sidebar-backdrop"></div>
+<aside class="ev-sidebar">
+  <a href="index.html" class="ev-logo"><span class="dot"></span>EduVerse AI</a>
+  <nav class="d-flex flex-column gap-1">
+    <a href="dashboard.html" class="ev-nav-link "><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+    <a href="performance.html" class="ev-nav-link "><i class="bi bi-graph-up-arrow"></i> Performance</a>
+    <a href="career.html" class="ev-nav-link "><i class="bi bi-briefcase-fill"></i> Career Path</a>
+    <a href="learning-dna.html" class="ev-nav-link "><i class="bi bi-diagram-3-fill"></i> Learning DNA</a>
+    <a href="senior-blueprint.html" class="ev-nav-link "><i class="bi bi-people-fill"></i> Senior Blueprint</a>
+    <a href="profile.html" class="ev-nav-link active"><i class="bi bi-person-circle"></i> Profile</a>
+  </nav>
+  <div class="mt-auto">
+    <div class="ev-sidebar-profile mb-2">
+      <div class="ev-avatar" data-student="initials">AM</div>
+      <div class="flex-grow-1 min-w-0">
+        <div class="fw-semibold small text-truncate" data-student="name">Avinash M</div>
+        <div class="text-muted-ev" style="font-size:.75rem;" data-student="dept">AI &amp; Data Science</div>
+      </div>
+    </div>
+    <a href="index.html" class="ev-nav-link"><i class="bi bi-box-arrow-right"></i> Logout</a>
+  </div>
+</aside>
+
+<main class="ev-main">
+  <div class="ev-topbar">
+    <div class="d-flex align-items-center gap-2">
+      <button class="sidebar-toggle-btn d-lg-none" aria-label="Open menu"><i class="bi bi-list"></i></button>
+      <h5 class="mb-0 d-none d-md-block">My Profile</h5>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <button class="theme-toggle" aria-label="Toggle theme"><i class="bi bi-moon-stars"></i></button>
+      <img src="" alt="" class="d-none">
+      <div class="ev-avatar d-none d-sm-flex" style="width:36px;height:36px;font-size:.8rem;" data-student="initials">AM</div>
+    </div>
+  </div>
+  <div class="ev-content">
+<div class="mb-4 d-flex flex-wrap justify-content-between align-items-end gap-2">
+  <div>
+    <h3>My Profile</h3>
+    <p class="text-muted-ev mb-0">Keep your details up to date for more accurate AI predictions.</p>
+  </div>
+  <button id="editProfileBtn" data-editing="false" class="btn-ev-outline"><i class="bi bi-pencil-square me-1"></i> Edit Profile</button>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="ev-card ev-card-pad text-center">
+      <div class="ev-avatar mx-auto mb-3" style="width:84px;height:84px;font-size:1.6rem;" data-student="initials">AM</div>
+      <h5 class="mb-0" data-student="name">Avinash M</h5>
+      <p class="text-muted-ev small mb-3" data-student="dept">AI &amp; Data Science</p>
+      <div class="d-flex justify-content-center gap-4">
+        <div><div class="fw-bold font-mono" data-student="cgpa">8.2</div><div class="text-muted-ev" style="font-size:.72rem;">CGPA</div></div>
+        <div><div class="fw-bold font-mono" data-student="attendance">87%</div><div class="text-muted-ev" style="font-size:.72rem;">Attendance</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="ev-card ev-card-pad mb-3">
+      <h6 class="mb-3">Student Details</h6>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Full Name</label>
+          <p class="profile-view fw-semibold" data-student="name">Avinash M</p>
+          <input type="text" class="form-control profile-edit d-none" value="Avinash M">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Department</label>
+          <p class="profile-view fw-semibold" data-student="dept">AI &amp; Data Science</p>
+          <select class="form-select profile-edit d-none">
+            <option selected>AI &amp; Data Science</option>
+            <option>Computer Science</option>
+            <option>Information Technology</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Year</label>
+          <p class="profile-view fw-semibold" data-student="year">3rd Year</p>
+          <select class="form-select profile-edit d-none">
+            <option>1st Year</option><option>2nd Year</option><option selected>3rd Year</option><option>4th Year</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Semester</label>
+          <p class="profile-view fw-semibold">5th Semester</p>
+          <select class="form-select profile-edit d-none">
+            <option>4</option><option selected>5</option><option>6</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">CGPA</label>
+          <p class="profile-view fw-semibold" data-student="cgpa">8.2</p>
+          <input type="number" step="0.01" class="form-control profile-edit d-none" value="8.2">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Attendance</label>
+          <p class="profile-view fw-semibold" data-student="attendance">87%</p>
+          <input type="number" class="form-control profile-edit d-none" value="87">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Career Goal</label>
+          <p class="profile-view fw-semibold" data-student="goal">Machine Learning Engineer</p>
+          <input type="text" class="form-control profile-edit d-none" value="Machine Learning Engineer">
+        </div>
+      </div>
+    </div>
+
+    <div class="ev-card ev-card-pad">
+      <h6 class="mb-3"><i class="bi bi-bar-chart-line me-2"></i>My Skills</h6>
+      <div class="mb-3">
+        <div class="d-flex justify-content-between small mb-1"><span>Python</span><span class="font-mono">80%</span></div>
+        <div class="ev-progress"><div class="ev-progress-bar" style="width:80%;"></div></div>
+      </div>
+      <div class="mb-3">
+        <div class="d-flex justify-content-between small mb-1"><span>SQL</span><span class="font-mono">60%</span></div>
+        <div class="ev-progress"><div class="ev-progress-bar" style="width:60%;"></div></div>
+      </div>
+      <div class="mb-3">
+        <div class="d-flex justify-content-between small mb-1"><span>Machine Learning</span><span class="font-mono">45%</span></div>
+        <div class="ev-progress"><div class="ev-progress-bar" style="width:45%;"></div></div>
+      </div>
+      <div class="mb-0">
+        <div class="d-flex justify-content-between small mb-1"><span>Statistics</span><span class="font-mono">55%</span></div>
+        <div class="ev-progress"><div class="ev-progress-bar" style="width:55%;"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+  </div>
+</main>
+</div>
+
+<nav class="ev-bottom-nav">
+  <a href="dashboard.html" class="item "><i class="bi bi-grid-1x2-fill"></i>Home</a>
+  <a href="performance.html" class="item "><i class="bi bi-graph-up-arrow"></i>Perform</a>
+  <a href="career.html" class="item "><i class="bi bi-briefcase-fill"></i>Career</a>
+  <a href="learning-dna.html" class="item "><i class="bi bi-diagram-3-fill"></i>DNA</a>
+  <a href="senior-blueprint.html" class="item "><i class="bi bi-people-fill"></i>Seniors</a>
+  <a href="profile.html" class="item active"><i class="bi bi-person-circle"></i>Profile</a>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
