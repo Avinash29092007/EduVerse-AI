@@ -18,6 +18,8 @@
     <a href="dashboard.html" class="ev-nav-link "><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
     <a href="performance.html" class="ev-nav-link "><i class="bi bi-graph-up-arrow"></i> Performance</a>
     <a href="career.html" class="ev-nav-link "><i class="bi bi-briefcase-fill"></i> Career Path</a>
+    <a href="domain-assessment.html" class="ev-nav-link "><i class="bi bi-compass-fill"></i> Domain Assessment</a>
+    <a href="aptitude.html" class="ev-nav-link "><i class="bi bi-patch-question-fill"></i> 🧠 Aptitude</a>
     <a href="learning-dna.html" class="ev-nav-link active"><i class="bi bi-diagram-3-fill"></i> Learning DNA</a>
     <a href="senior-blueprint.html" class="ev-nav-link "><i class="bi bi-people-fill"></i> Senior Blueprint</a>
     <a href="profile.html" class="ev-nav-link "><i class="bi bi-person-circle"></i> Profile</a>
@@ -50,120 +52,63 @@
 <div class="mb-4 d-flex flex-wrap justify-content-between align-items-end gap-2">
   <div>
     <h3>Your Dynamic Learning DNA</h3>
-    <p class="text-muted-ev mb-0">Your learning path adapts to your skills, interests, academic performance, and career goal.</p>
+    <p class="text-muted-ev mb-0">Your learning path adapts to your skills, interests, academic performance, and selected domain.</p>
   </div>
   <span class="ev-badge"><i class="bi bi-patch-check"></i> Original Feature</span>
+</div>
+
+<!-- Domain switcher -->
+<div class="ev-card ev-card-pad mb-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div class="d-flex align-items-center gap-2">
+      <span id="dnaDomainIcon" style="font-size:1.4rem;">🤖</span>
+      <div>
+        <div class="text-muted-ev small">Selected Domain</div>
+        <h6 class="mb-0" id="dnaDomainName">Machine Learning</h6>
+      </div>
+    </div>
+    <a href="domain-assessment.html" class="btn-ev-outline btn-sm">Change My Domain <i class="bi bi-arrow-repeat ms-1"></i></a>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    <button class="dna-domain-switch" data-domain="ml">🤖 Machine Learning</button>
+    <button class="dna-domain-switch" data-domain="dl">🧠 Deep Learning</button>
+    <button class="dna-domain-switch" data-domain="ds">📊 Data Science</button>
+    <button class="dna-domain-switch" data-domain="da">📈 Data Analytics</button>
+    <button class="dna-domain-switch" data-domain="sd">💻 Software Development</button>
+    <button class="dna-domain-switch" data-domain="cc">☁️ Cloud Computing</button>
+    <button class="dna-domain-switch" data-domain="cs">🔐 Cyber Security</button>
+  </div>
 </div>
 
 <div class="row g-3">
   <div class="col-lg-8">
     <div class="ev-card ev-card-pad">
-      <h6 class="mb-4"><i class="bi bi-diagram-3 me-2"></i>Your Roadmap</h6>
-      <div class="dna-track">
-
-        <div class="dna-node completed">
-          <div class="ev-card ev-card-pad" style="background:var(--bg-sunken); box-shadow:none;">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-              <div>
-                <h6 class="mb-0">Python</h6>
-                <span class="text-muted-ev small">Difficulty: Beginner</span>
-              </div>
-              <span class="ev-chip have">Completed</span>
-            </div>
-            <div class="ev-progress mb-1"><div class="ev-progress-bar" style="width:100%;"></div></div>
-            <div class="d-flex justify-content-between small"><span class="text-muted-ev">Progress</span><span class="font-mono">100%</span></div>
-          </div>
-        </div>
-
-        <div class="dna-node completed">
-          <div class="ev-card ev-card-pad" style="background:var(--bg-sunken); box-shadow:none;">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-              <div><h6 class="mb-0">NumPy</h6><span class="text-muted-ev small">Difficulty: Beginner</span></div>
-              <span class="ev-chip have">Completed</span>
-            </div>
-            <div class="ev-progress mb-1"><div class="ev-progress-bar" style="width:100%;"></div></div>
-            <div class="d-flex justify-content-between small"><span class="text-muted-ev">Progress</span><span class="font-mono">100%</span></div>
-          </div>
-        </div>
-
-        <div class="dna-node completed">
-          <div class="ev-card ev-card-pad" style="background:var(--bg-sunken); box-shadow:none;">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-              <div><h6 class="mb-0">Pandas</h6><span class="text-muted-ev small">Difficulty: Intermediate</span></div>
-              <span class="ev-chip have">Completed</span>
-            </div>
-            <div class="ev-progress mb-1"><div class="ev-progress-bar" style="width:90%;"></div></div>
-            <div class="d-flex justify-content-between small"><span class="text-muted-ev">Progress</span><span class="font-mono">90%</span></div>
-          </div>
-        </div>
-
-        <div class="dna-node progress">
-          <div class="ev-card ev-card-pad" style="background:var(--bg-sunken); box-shadow:none; border:1px solid rgba(245,158,11,.35);">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-              <div><h6 class="mb-0">Statistics</h6><span class="text-muted-ev small">Difficulty: Intermediate</span></div>
-              <span class="ev-chip" style="background:rgba(245,158,11,.12); color:#B45309;">In Progress</span>
-            </div>
-            <div class="ev-progress mb-1"><div class="ev-progress-bar" style="width:65%; background:var(--ev-amber);"></div></div>
-            <div class="d-flex justify-content-between small"><span class="text-muted-ev">Progress</span><span class="font-mono">65%</span></div>
-            <div class="small text-muted-ev mt-2"><i class="bi bi-arrow-right-short"></i> Next: finish hypothesis testing module</div>
-          </div>
-        </div>
-
-        <div class="dna-node next">
-          <div class="ev-card ev-card-pad" style="border:1.5px dashed var(--ev-indigo);">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-              <div><h6 class="mb-0">Machine Learning</h6><span class="text-muted-ev small">Difficulty: Advanced</span></div>
-              <span class="ev-badge"><i class="bi bi-flag"></i> Next</span>
-            </div>
-            <div class="ev-progress mb-1"><div class="ev-progress-bar" style="width:0%;"></div></div>
-            <div class="d-flex justify-content-between small"><span class="text-muted-ev">Progress</span><span class="font-mono">0%</span></div>
-          </div>
-        </div>
-
-        <div class="dna-node">
-          <div class="ev-card ev-card-pad" style="opacity:.65;">
-            <h6 class="mb-1">Model Evaluation</h6>
-            <span class="text-muted-ev small">Difficulty: Advanced · Upcoming</span>
-          </div>
-        </div>
-        <div class="dna-node">
-          <div class="ev-card ev-card-pad" style="opacity:.65;">
-            <h6 class="mb-1">Projects</h6>
-            <span class="text-muted-ev small">Difficulty: Advanced · Upcoming</span>
-          </div>
-        </div>
-        <div class="dna-node">
-          <div class="ev-card ev-card-pad" style="opacity:.65;">
-            <h6 class="mb-1">Deployment</h6>
-            <span class="text-muted-ev small">Difficulty: Advanced · Upcoming</span>
-          </div>
-        </div>
-
+      <h6 class="mb-4"><i class="bi bi-diagram-3 me-2"></i>Your Personalized Roadmap</h6>
+      <div class="dna-track" id="dynamicDnaTrack">
+        <!-- filled dynamically by script.js based on selected domain + skill progress -->
       </div>
     </div>
   </div>
 
   <div class="col-lg-4">
-    <div class="ev-card ev-card-pad mb-3" style="background:var(--ev-gradient); border:none;">
-      <span class="text-white-50 small text-uppercase fw-bold">Recommended Next</span>
-      <h4 class="text-white mt-1 mb-0">Statistics</h4>
-      <p class="text-white-50 small mb-0">Complete this to unlock Machine Learning.</p>
+    <div class="ev-card ev-card-pad mb-3" style="background:var(--ev-gradient); border:none;" id="nextBestSkillBox">
+      <!-- filled by script.js -->
     </div>
 
     <div class="ev-card ev-card-pad">
       <h6 class="mb-3"><i class="bi bi-question-circle me-2"></i>Why this roadmap?</h6>
       <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
-        <li class="d-flex gap-2"><i class="bi bi-check-circle text-success mt-1"></i><span class="small">Your career goal: <strong>Machine Learning Engineer</strong></span></li>
-        <li class="d-flex gap-2"><i class="bi bi-check-circle text-success mt-1"></i><span class="small">Your current skills: Python, Pandas</span></li>
-        <li class="d-flex gap-2"><i class="bi bi-check-circle text-success mt-1"></i><span class="small">Your weak area: Statistics</span></li>
-        <li class="d-flex gap-2"><i class="bi bi-check-circle text-success mt-1"></i><span class="small">Your learning progress: 61% overall</span></li>
+        <li class="d-flex gap-2"><i class="bi bi-check-circle text-success mt-1"></i><span class="small">Your selected domain and career goal</span></li>
+        <li class="d-flex gap-2"><i class="bi bi-check-circle text-success mt-1"></i><span class="small">Your academic + CAT results</span></li>
+        <li class="d-flex gap-2"><i class="bi bi-check-circle text-success mt-1"></i><span class="small">Your aptitude assessment results</span></li>
+        <li class="d-flex gap-2"><i class="bi bi-check-circle text-success mt-1"></i><span class="small">Your current skill progress</span></li>
       </ul>
     </div>
   </div>
 </div>
 
 <p class="text-muted-ev small mt-3">
-  <i class="bi bi-info-circle me-1"></i> This roadmap is currently generated from demo logic. The final version will use a content-based recommendation engine driven by your live skill and performance data.
+  <i class="bi bi-info-circle me-1"></i> This roadmap is generated from demo logic combining your profile, domain choice, and skill progress. The final version will use a content-based recommendation engine driven by live data.
 </p>
   </div>
 </main>
@@ -181,5 +126,6 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="script.js"></script>
+
 </body>
 </html>
