@@ -378,3 +378,16 @@ footer.ev-footer{
 
 .fade-up{ opacity:0; transform:translateY(16px); transition:opacity .6s ease, transform .6s ease; }
 .fade-up.in{ opacity:1; transform:translateY(0); }
+
+/* ==========================================================================
+   Domain Assessment + Aptitude Test add-on
+   ========================================================================== */
+.aptitude-option{ border-radius:14px; transition:border-color .15s ease, transform .15s ease; }
+.aptitude-option:hover{ border-color:var(--ev-indigo) !important; transform:translateX(2px); }
+.aptitude-option.selected{ background:var(--ev-gradient-soft); }
+
+.dna-domain-switch{
+  border:1.5px solid var(--border); border-radius:999px; padding:.4rem .9rem;
+  font-size:.82rem; font-weight:600; color:var(--text-muted); background:var(--bg-elevated);
+}
+.dna-domain-switch.active-switch{ background:var(--ev-gradient); color:#fff; border-color:transparent; }
