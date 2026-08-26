@@ -390,4 +390,79 @@ footer.ev-footer{
   border:1.5px solid var(--border); border-radius:999px; padding:.4rem .9rem;
   font-size:.82rem; font-weight:600; color:var(--text-muted); background:var(--bg-elevated);
 }
-.dna-domain-switch.active-switch{ background:var(--ev-gradient); color:#fff; border-color:transparent; }
+.dna-domain-switch.active-switch{ background:var(--ev-gradient); color:#fff; border-color:transparent; }/* =========================================================
+   BIG NEUMORPHIC CIRCLE — LOGIN PAGE
+   ========================================================= */
+
+.login-page {
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #eeeeee;
+}
+
+/* BIG CIRCLE */
+.login-page::before {
+  content: "";
+  position: absolute;
+
+  width: 850px;
+  height: 850px;
+
+  border-radius: 50%;
+
+  background: #eeeeee;
+
+  /* 3D / neumorphic effect */
+  box-shadow:
+    -35px -35px 70px rgba(255, 255, 255, 0.95),
+    35px 35px 70px rgba(170, 170, 170, 0.45);
+
+  /* Position the circle */
+  top: 50%;
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+
+  z-index: 0;
+}
+
+/* Optional inner circle effect */
+.login-page::after {
+  content: "";
+  position: absolute;
+
+  width: 600px;
+  height: 600px;
+
+  border-radius: 50%;
+
+  background: #eeeeee;
+
+  box-shadow:
+    inset -20px -20px 45px rgba(255, 255, 255, 0.9),
+    inset 20px 20px 45px rgba(190, 190, 190, 0.35);
+
+  top: 50%;
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+
+  z-index: 0;
+}
+
+/* Keep login content above circles */
+.login-container {
+  position: relative;
+  z-index: 2;
+
+  width: 100%;
+  max-width: 570px;
+  padding: 50px 40px;
+}
+
