@@ -195,9 +195,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* ---------------------------------------------------------------------- *
  * 7. Fill in student profile placeholders across pages
+ *    Prefers a real registered profile (localStorage, set by department.js
+ *    at registration) over the EDUVERSE_DEMO fallback — this key is a
+ *    shared data contract, not a function dependency, so it works on
+ *    every page whether or not department.js is loaded there.
  * ---------------------------------------------------------------------- */
+function getDisplayStudent(){
+  try{
+    const stored = JSON.parse(localStorage.getItem('eduverse-student-profile'));
+    if(stored && stored.name){
+      return Object.assign({}, EDUVERSE_DEMO.student, {
+        name: stored.name,
+        department: stored.department,
+        year: stored.year,
+        cgpa: stored.cgpa,
+        attendance: stored.attendance,
+        careerGoal: stored.careerInterest,
+      });
+    }
+  } catch(e){ /* ignore malformed storage */ }
+  return EDUVERSE_DEMO.student;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-  const s = EDUVERSE_DEMO.student;
+  const s = getDisplayStudent();
   document.querySelectorAll('[data-student="name"]').forEach(el=>el.textContent = s.name);
   document.querySelectorAll('[data-student="firstname"]').forEach(el=>el.textContent = s.name.split(' ')[0]);
   document.querySelectorAll('[data-student="dept"]').forEach(el=>el.textContent = s.department);
@@ -209,6 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
     el.textContent = s.name.split(' ').map(w=>w[0]).join('').slice(0,2);
   });
 });
+
 
 /* ---------------------------------------------------------------------- *
  * 8. Chart helpers (Chart.js) — used by dashboard.html, performance.html,
