@@ -25,46 +25,45 @@
         <button class="theme-toggle" aria-label="Toggle theme"><i class="bi bi-moon-stars"></i></button>
       </div>
 
-      <form class="needs-validation" novalidate data-success-redirect="dashboard.html">
+      <form class="needs-validation" id="registerForm" novalidate>
         <div class="row g-3">
           <div class="col-md-6">
             <label class="form-label">Full Name</label>
-            <input type="text" class="form-control" placeholder="Avinash M" required>
+            <input type="text" id="fullNameInput" class="form-control" placeholder="Avinash M" required>
             <div class="invalid-feedback">Please enter your name.</div>
           </div>
           <div class="col-md-6">
             <label class="form-label">Email</label>
-            <input type="email" class="form-control" placeholder="you@college.edu" required>
+            <input type="email" id="emailInput" class="form-control" placeholder="you@college.edu" required>
             <div class="invalid-feedback">Please enter a valid email.</div>
           </div>
           <div class="col-md-6">
             <label class="form-label">Password</label>
-            <input type="password" class="form-control" placeholder="••••••••" required minlength="4">
+            <input type="password" id="passwordInput" class="form-control" placeholder="••••••••" required minlength="4">
             <div class="invalid-feedback">Password must be at least 4 characters.</div>
           </div>
           <div class="col-md-6">
             <label class="form-label">College</label>
-            <input type="text" class="form-control" placeholder="T.J.S Engineering College" required>
+            <input type="text" id="collegeInput" class="form-control" placeholder="T.J.S Engineering College" required>
             <div class="invalid-feedback">Please enter your college.</div>
           </div>
           <div class="col-md-6">
             <label class="form-label">Department</label>
-            <select class="form-select" required>
+            <select class="form-select" id="departmentSelect" required>
               <option value="" selected disabled>Select department</option>
-              <option>AI &amp; Data Science</option>
-              <option>Computer Science</option>
-              <option>Information Technology</option>
-              <option>ECE</option>
-              <option>EEE</option>
-              <option>Mechanical</option>
-              <option>Civil</option>
-              <option>Other</option>
+              <option value="ai_ds">Artificial Intelligence &amp; Data Science (AI &amp; DS)</option>
+              <option value="cse">Computer Science &amp; Engineering (CSE)</option>
+              <option value="ece">Electronics &amp; Communication Engineering (ECE)</option>
+              <option value="eee">Electrical &amp; Electronics Engineering (EEE)</option>
+              <option value="mech">Mechanical Engineering</option>
+              <option value="civil">Civil Engineering</option>
+              <option value="it">Information Technology (IT)</option>
             </select>
-            <div class="invalid-feedback">Please select a department.</div>
+            <div class="invalid-feedback">Please select a department — your personalized roadmap depends on it.</div>
           </div>
           <div class="col-md-6">
             <label class="form-label">Year</label>
-            <select class="form-select" required>
+            <select class="form-select" id="yearSelect" required>
               <option value="" selected disabled>Select year</option>
               <option>1st Year</option>
               <option>2nd Year</option>
@@ -75,7 +74,7 @@
           </div>
           <div class="col-md-4">
             <label class="form-label">Semester</label>
-            <select class="form-select" required>
+            <select class="form-select" id="semesterSelect" required>
               <option value="" selected disabled>Select semester</option>
               <option>1</option><option>2</option><option>3</option><option>4</option>
               <option>5</option><option>6</option><option>7</option><option>8</option>
@@ -84,22 +83,26 @@
           </div>
           <div class="col-md-4">
             <label class="form-label">CGPA</label>
-            <input type="number" step="0.01" min="0" max="10" class="form-control" placeholder="8.2" required>
+            <input type="number" step="0.01" min="0" max="10" id="cgpaInput" class="form-control" placeholder="8.2" required>
             <div class="invalid-feedback">Enter a CGPA between 0 and 10.</div>
           </div>
           <div class="col-md-4">
             <label class="form-label">Attendance (%)</label>
-            <input type="number" min="0" max="100" class="form-control" placeholder="87" required>
+            <input type="number" min="0" max="100" id="attendanceInput" class="form-control" placeholder="87" required>
             <div class="invalid-feedback">Enter attendance between 0–100.</div>
           </div>
           <div class="col-12">
             <label class="form-label">Career Interest</label>
-            <input type="text" class="form-control" placeholder="e.g. Machine Learning Engineer" required>
+            <input type="text" id="careerInterestInput" class="form-control" placeholder="e.g. Machine Learning Engineer" required>
             <div class="invalid-feedback">Please tell us your career interest.</div>
           </div>
         </div>
 
-        <button type="submit" class="btn-ev-primary w-100 mt-4">Create Student Profile</button>
+        <p class="text-muted-ev small mt-3 mb-0" id="roadmapHint">
+          <i class="bi bi-signpost-2 me-1"></i>Your department decides your personalized roadmap — you'll see it right after registering.
+        </p>
+
+        <button type="submit" class="btn-ev-primary w-100 mt-3">Create Student Profile</button>
       </form>
 
       <p class="text-center text-muted-ev small mt-4 mb-0">
@@ -111,5 +114,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="script.js"></script>
+<script src="department.js"></script>
 </body>
 </html>
