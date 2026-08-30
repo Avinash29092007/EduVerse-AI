@@ -1,201 +1,469 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard — EduVerse AI</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-<div class="ev-app">
-<div class="ev-sidebar-backdrop"></div>
-<aside class="ev-sidebar">
-  <a href="index.html" class="ev-logo"><span class="dot"></span>EduVerse AI</a>
-  <nav class="d-flex flex-column gap-1">
-    <a href="dashboard.html" class="ev-nav-link active"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
-    <a href="department.html" class="ev-nav-link "><i class="bi bi-building"></i> My Department</a>
-    <a href="performance.html" class="ev-nav-link "><i class="bi bi-graph-up-arrow"></i> Performance</a>
-    <a href="career.html" class="ev-nav-link "><i class="bi bi-briefcase-fill"></i> Career Path</a>
-    <a href="domain-assessment.html" class="ev-nav-link "><i class="bi bi-compass-fill"></i> Domain Assessment</a>
-    <a href="aptitude.html" class="ev-nav-link "><i class="bi bi-patch-question-fill"></i> 🧠 Aptitude</a>
-    <a href="learning-dna.html" class="ev-nav-link "><i class="bi bi-diagram-3-fill"></i> Learning DNA</a>
-    <a href="senior-blueprint.html" class="ev-nav-link "><i class="bi bi-people-fill"></i> Senior Blueprint</a>
-    <a href="profile.html" class="ev-nav-link "><i class="bi bi-person-circle"></i> Profile</a>
-  </nav>
-  <div class="mt-auto">
-    <div class="ev-sidebar-profile mb-2">
-      <div class="ev-avatar" data-student="initials">AM</div>
-      <div class="flex-grow-1 min-w-0">
-        <div class="fw-semibold small text-truncate" data-student="name">Avinash M</div>
-        <div class="text-muted-ev" style="font-size:.75rem;" data-student="dept">AI &amp; Data Science</div>
+/* ==========================================================================
+   EduVerse AI — department.js
+   Department-based registration + personalized roadmap add-on.
+   Frontend-only, localStorage-backed. Structured so a Flask + MongoDB
+   backend can later replace the localStorage calls with real API calls
+   without touching the rendering functions below them.
+
+   Data contract stored in localStorage:
+     eduverse-student-profile   -> { name, email, college, department,
+                                      year, semester, cgpa, attendance,
+                                      careerInterest, roadmap }
+     eduverse-roadmap-progress  -> { [roadmapKey]: [completedStageIndex, ...] }
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------- *
+ * 1. DEPARTMENT → ROADMAP DATA
+ *    Adding a new department later only means adding one entry here —
+ *    no other file needs to change.
+ * ---------------------------------------------------------------------- */
+const DEPARTMENT_ROADMAPS = {
+  ai_ds: {
+    label: "Artificial Intelligence & Data Science (AI & DS)",
+    stages: ["Python", "Statistics", "SQL", "Data Analysis", "Machine Learning", "Deep Learning", "Generative AI", "Projects", "Internship", "Placement"],
+  },
+  cse: {
+    label: "Computer Science & Engineering (CSE)",
+    stages: ["Programming", "DSA", "OOP", "DBMS", "Operating Systems", "Computer Networks", "Web Development", "Projects", "Internship", "Placement"],
+  },
+  ece: {
+    label: "Electronics & Communication Engineering (ECE)",
+    stages: ["Circuit Fundamentals", "Digital Electronics", "Microprocessors", "Embedded Systems", "Communication Systems", "IoT", "Projects", "Internship", "Placement"],
+  },
+  eee: {
+    label: "Electrical & Electronics Engineering (EEE)",
+    stages: ["Electrical Fundamentals", "Circuit Theory", "Electrical Machines", "Power Systems", "Control Systems", "Power Electronics", "Projects", "Internship", "Placement"],
+  },
+  mech: {
+    label: "Mechanical Engineering",
+    stages: ["Engineering Mechanics", "Thermodynamics", "Fluid Mechanics", "CAD", "Manufacturing", "Robotics/Automation", "Projects", "Internship", "Placement"],
+  },
+  civil: {
+    label: "Civil Engineering",
+    stages: ["Engineering Mechanics", "Structural Analysis", "Surveying", "Concrete Technology", "Geotechnical Engineering", "Construction Management", "Projects", "Internship", "Placement"],
+  },
+  it: {
+    label: "Information Technology (IT)",
+    stages: ["Programming", "DSA", "DBMS", "Web Development", "Cloud Computing", "Cybersecurity", "DevOps", "Projects", "Internship", "Placement"],
+  },
+};
+
+/* ---------------------------------------------------------------------- *
+ * 2. STORAGE HELPERS — BACKEND: swap for POST /api/students,
+ *    GET/POST /api/students/:id/roadmap-progress
+ * ---------------------------------------------------------------------- */
+function getStudentProfile() {
+  try { return JSON.parse(localStorage.getItem('eduverse-student-profile')); }
+  catch (e) { return null; }
+}
+function saveStudentProfile(profile) {
+  localStorage.setItem('eduverse-student-profile', JSON.stringify(profile));
+}
+function getRoadmapProgress() {
+  try { return JSON.parse(localStorage.getItem('eduverse-roadmap-progress') || '{}'); }
+  catch (e) { return {}; }
+}
+function saveRoadmapProgress(progress) {
+  localStorage.setItem('eduverse-roadmap-progress', JSON.stringify(progress));
+}
+/* Falls back to the AI & DS demo roadmap when no student has registered yet,
+   so the dashboard never renders empty. */
+function getActiveRoadmapKey() {
+  const profile = getStudentProfile();
+  return (profile && DEPARTMENT_ROADMAPS[profile.roadmap]) ? profile.roadmap : 'ai_ds';
+}
+
+/* ---------------------------------------------------------------------- *
+ * 3. REGISTRATION — captures the form, assigns the department roadmap,
+ *    stores the profile, and redirects to the dashboard.
+ * ---------------------------------------------------------------------- */
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('registerForm');
+  if (!form) return;
+
+  const deptSelect = document.getElementById('departmentSelect');
+
+  /* Requirement 9: keep validity messaging in sync as the student changes
+     their department selection before submitting. */
+  deptSelect.addEventListener('change', () => {
+    deptSelect.setCustomValidity('');
+  });
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const deptKey = deptSelect.value;
+    const deptInfo = DEPARTMENT_ROADMAPS[deptKey];
+    if (!deptInfo) {
+      deptSelect.setCustomValidity('Please select a department.');
+    }
+
+    if (!form.checkValidity()) {
+      form.classList.add('was-validated');
+      return;
+    }
+
+    const profile = {
+      name: document.getElementById('fullNameInput').value.trim(),
+      email: document.getElementById('emailInput').value.trim(),
+      college: document.getElementById('collegeInput').value.trim(),
+      department: deptInfo.label,
+      year: document.getElementById('yearSelect').value,
+      semester: document.getElementById('semesterSelect').value,
+      cgpa: parseFloat(document.getElementById('cgpaInput').value),
+      attendance: parseInt(document.getElementById('attendanceInput').value, 10),
+      careerInterest: document.getElementById('careerInterestInput').value.trim(),
+      roadmap: deptKey, // roadmap identifier — dynamically assigned from the selected department
+    };
+
+    saveStudentProfile(profile);
+
+    /* Seed empty progress for this roadmap if the student hasn't started one yet */
+    const progress = getRoadmapProgress();
+    if (!progress[deptKey]) progress[deptKey] = [];
+    saveRoadmapProgress(progress);
+
+    window.location.href = 'department.html';
+  });
+});
+
+/* ---------------------------------------------------------------------- *
+ * 4. DASHBOARD — department-specific roadmap as trackable stage cards
+ * ---------------------------------------------------------------------- */
+function renderDepartmentRoadmapCard() {
+  const box = document.getElementById('departmentRoadmapCard');
+  if (!box) return;
+
+  const profile = getStudentProfile();
+  const roadmapKey = getActiveRoadmapKey();
+  const dept = DEPARTMENT_ROADMAPS[roadmapKey];
+  const progress = getRoadmapProgress();
+  const completed = new Set(progress[roadmapKey] || []);
+
+  box.innerHTML = `
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+      <div>
+        <h6 class="mb-1"><i class="bi bi-signpost-2 me-2"></i>My Department Roadmap</h6>
+        <p class="text-muted-ev small mb-0">
+          ${dept.label}
+          ${!profile ? '<span class="ev-badge demo ms-2"><i class="bi bi-cpu"></i> Demo Profile</span>' : ''}
+        </p>
+        ${profile && profile.domainLabel ? `<p class="text-muted-ev small mb-0 mt-1"><i class="bi bi-bullseye me-1"></i>Focus domain: <strong style="color:var(--text);">${profile.domainLabel}</strong> — <a href="department.html" style="color:var(--ev-indigo);">change</a></p>` : `<p class="text-muted-ev small mb-0 mt-1"><a href="department.html" style="color:var(--ev-indigo);">Choose a domain to focus on <i class="bi bi-arrow-right"></i></a></p>`}
       </div>
+      <span class="ev-chip">${completed.size} / ${dept.stages.length} completed</span>
     </div>
-    <a href="index.html" class="ev-nav-link"><i class="bi bi-box-arrow-right"></i> Logout</a>
-  </div>
-</aside>
+    <div class="dna-track" id="roadmapStagesTrack"></div>
+    <p class="text-muted-ev small mt-2 mb-0">
+      <i class="bi bi-info-circle me-1"></i>Tap a stage to mark it completed or pending. This roadmap always matches the department chosen at registration.
+    </p>
+  `;
 
-<main class="ev-main">
-  <div class="ev-topbar">
-    <div class="d-flex align-items-center gap-2">
-      <button class="sidebar-toggle-btn d-lg-none" aria-label="Open menu"><i class="bi bi-list"></i></button>
-      <h5 class="mb-0 d-none d-md-block">Dashboard</h5>
-    </div>
-    <div class="d-flex align-items-center gap-2">
-      <button class="theme-toggle" aria-label="Toggle theme"><i class="bi bi-moon-stars"></i></button>
-      <img src="" alt="" class="d-none">
-      <div class="ev-avatar d-none d-sm-flex" style="width:36px;height:36px;font-size:.8rem;" data-student="initials">AM</div>
-    </div>
-  </div>
-  <div class="ev-content">
-<div class="mb-4">
-  <h3>Welcome back, <span data-student="firstname">Avinash</span> 👋</h3>
-  <p class="text-muted-ev mb-0">Here's your AI-powered snapshot for this semester.</p>
-</div>
+  renderRoadmapStages(dept, completed);
+}
 
-<!-- Summary cards -->
-<div class="row g-3 mb-4">
-  <div class="col-6 col-lg-3">
-    <div class="ev-card ev-card-pad h-100">
-      <div class="d-flex justify-content-between align-items-start">
-        <div>
-          <div class="text-muted-ev small mb-1">CGPA</div>
-          <div class="ev-stat-value" data-student="cgpa">8.2</div>
+function renderRoadmapStages(dept, completed) {
+  const track = document.getElementById('roadmapStagesTrack');
+  if (!track) return;
+
+  let nextAssigned = false;
+  track.innerHTML = dept.stages.map((stage, i) => {
+    const isDone = completed.has(i);
+    let nodeClass = 'dna-node';
+    let cardStyle = 'opacity:.6;';
+    let chipClass = 'ev-chip';
+    let statusLabel = 'Locked';
+
+    if (isDone) {
+      nodeClass = 'dna-node completed';
+      cardStyle = 'background:var(--bg-sunken); box-shadow:none; cursor:pointer;';
+      chipClass = 'ev-chip have';
+      statusLabel = 'Completed';
+    } else if (!nextAssigned) {
+      nodeClass = 'dna-node next';
+      cardStyle = 'border:1.5px dashed var(--ev-indigo); background:var(--bg-elevated); cursor:pointer;';
+      chipClass = 'ev-badge';
+      statusLabel = 'Up Next';
+      nextAssigned = true;
+    } else {
+      cardStyle += 'cursor:pointer;';
+    }
+
+    return `
+    <div class="${nodeClass}">
+      <div class="ev-card ev-card-pad roadmap-stage-btn" data-index="${i}" style="${cardStyle}">
+        <div class="d-flex justify-content-between align-items-center">
+          <h6 class="mb-0">${i + 1}. ${stage}</h6>
+          <span class="${chipClass}">${statusLabel}</span>
         </div>
-        <div class="ev-icon-tile" style="width:40px;height:40px;font-size:1rem;"><i class="bi bi-award"></i></div>
       </div>
-      <div class="ev-progress mt-3"><div class="ev-progress-bar" style="width:82%;"></div></div>
+    </div>`;
+  }).join('');
+}
+
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.roadmap-stage-btn');
+  if (!btn) return;
+
+  const idx = parseInt(btn.getAttribute('data-index'), 10);
+  const roadmapKey = getActiveRoadmapKey();
+  const progress = getRoadmapProgress();
+  const list = new Set(progress[roadmapKey] || []);
+
+  if (list.has(idx)) list.delete(idx); else list.add(idx);
+  progress[roadmapKey] = Array.from(list).sort((a, b) => a - b);
+  saveRoadmapProgress(progress);
+
+  renderDepartmentRoadmapCard();
+});
+
+document.addEventListener('DOMContentLoaded', renderDepartmentRoadmapCard);
+
+/* ==========================================================================
+   DEPARTMENT-SPECIFIC PAGES — domains, skills, roadmaps, projects, careers
+   Kept as a separate data object (DEPARTMENT_DOMAINS) rather than merging
+   into DEPARTMENT_ROADMAPS above, so the simple dashboard roadmap card and
+   this richer department page can evolve independently. Adding a new
+   department later means adding one entry here — no other file changes.
+   ========================================================================== */
+const DEPARTMENT_DOMAINS = {
+  ai_ds: {
+    intro: "AI & Data Science blends programming, mathematics, and machine learning to turn data into intelligent systems — from predictive models to generative AI.",
+    industrySkills: ["Python", "Statistics", "SQL", "Git", "Cloud Basics", "Communication"],
+    recommendedTech: ["Python", "Pandas / NumPy", "Scikit-learn", "TensorFlow / PyTorch", "SQL", "Docker"],
+    domains: [
+      { id: "ml", name: "Machine Learning", desc: "Build models that learn patterns from data to make predictions and decisions.", skills: ["Python", "Statistics", "Scikit-learn", "Feature Engineering"], roadmap: ["Python", "Statistics", "Supervised Learning", "Unsupervised Learning", "Model Evaluation", "ML Projects"], projects: ["House price predictor", "Customer churn model", "Spam classifier"], tech: ["Python", "Scikit-learn", "Pandas", "NumPy"], careers: ["ML Engineer", "Data Scientist", "AI Analyst"] },
+      { id: "ds", name: "Data Science", desc: "Extract insight from raw data through cleaning, analysis, and storytelling.", skills: ["Python", "SQL", "Statistics", "Visualization"], roadmap: ["Python", "SQL", "Statistics", "EDA", "Visualization", "Data Science Projects"], projects: ["Sales analysis dashboard", "A/B test analysis"], tech: ["Pandas", "Matplotlib / Seaborn", "SQL", "Jupyter"], careers: ["Data Scientist", "Data Analyst", "BI Analyst"] },
+      { id: "da", name: "Data Analytics", desc: "Turn business data into dashboards and decisions using analytics tools.", skills: ["Excel", "SQL", "Power BI", "Statistics"], roadmap: ["Excel", "SQL", "Statistics", "Power BI / Tableau", "Analytics Projects"], projects: ["Sales performance dashboard", "Marketing analytics report"], tech: ["Power BI", "Tableau", "SQL", "Excel"], careers: ["Data Analyst", "Business Analyst", "Reporting Analyst"] },
+      { id: "dl", name: "Deep Learning", desc: "Design neural networks for vision, language, and complex pattern recognition.", skills: ["Python", "Linear Algebra", "Neural Networks"], roadmap: ["Python", "Linear Algebra", "Neural Networks", "CNN", "RNN / LSTM", "DL Projects"], projects: ["Image classifier", "Digit recognizer"], tech: ["TensorFlow", "PyTorch", "Keras"], careers: ["Deep Learning Engineer", "AI Researcher"] },
+      { id: "nlp", name: "NLP", desc: "Teach machines to understand and generate human language.", skills: ["Python", "Linguistics Basics", "Text Processing"], roadmap: ["Python", "Text Preprocessing", "Embeddings", "Sequence Models", "Transformers", "NLP Projects"], projects: ["Sentiment analyzer", "Chatbot"], tech: ["spaCy", "NLTK", "Hugging Face"], careers: ["NLP Engineer", "Conversational AI Developer"] },
+      { id: "cv", name: "Computer Vision", desc: "Enable machines to interpret and act on visual information.", skills: ["Python", "Image Processing", "Deep Learning"], roadmap: ["Python", "Image Processing", "CNNs", "Object Detection", "CV Projects"], projects: ["Face detector", "Object counter"], tech: ["OpenCV", "TensorFlow", "PyTorch"], careers: ["Computer Vision Engineer", "AI Engineer"] },
+      { id: "genai", name: "Generative AI", desc: "Build systems that generate text, images, or code using large models.", skills: ["Python", "Deep Learning", "Prompting"], roadmap: ["Python", "Deep Learning", "Transformers", "LLM Fine-tuning", "GenAI Projects"], projects: ["AI content generator", "Custom chatbot"], tech: ["Hugging Face", "LangChain", "Open-source LLMs"], careers: ["GenAI Engineer", "AI Product Developer"] },
+      { id: "mlops", name: "MLOps", desc: "Deploy, monitor, and scale machine learning systems in production.", skills: ["Python", "Docker", "CI/CD", "Cloud Basics"], roadmap: ["Python", "ML Basics", "Docker", "CI/CD", "Model Monitoring", "MLOps Projects"], projects: ["Model deployment pipeline", "Automated retraining pipeline"], tech: ["Docker", "MLflow", "Kubernetes", "Cloud (AWS/GCP)"], careers: ["MLOps Engineer", "ML Platform Engineer"] },
+    ],
+  },
+
+  cse: {
+    intro: "Computer Science Engineering covers the full spectrum of software systems — from algorithms and architecture to web, cloud, and intelligent applications.",
+    industrySkills: ["Programming", "DSA", "Git", "Problem Solving", "System Design", "Communication"],
+    recommendedTech: ["Java / Python / C++", "Git", "SQL", "Docker", "Cloud Basics"],
+    domains: [
+      { id: "swdev", name: "Software Development", desc: "Design and build reliable, maintainable software applications.", skills: ["Programming", "DSA", "OOP", "Git"], roadmap: ["Programming", "DSA", "OOP", "Design Patterns", "Testing", "Software Projects"], projects: ["Inventory management system", "Library management app"], tech: ["Java / Python", "Git", "SQL"], careers: ["Software Engineer", "Backend Developer"] },
+      { id: "webdev", name: "Web Development", desc: "Build interactive websites and web applications end to end.", skills: ["HTML/CSS", "JavaScript", "Backend Basics", "Database"], roadmap: ["HTML/CSS", "JavaScript", "Frontend Framework", "Backend", "Database", "Web Projects"], projects: ["Portfolio website", "E-commerce site"], tech: ["React", "Node.js", "MongoDB / SQL"], careers: ["Frontend Developer", "Full Stack Developer"] },
+      { id: "appdev", name: "App Development", desc: "Create mobile applications for Android and iOS.", skills: ["Programming", "UI/UX Basics", "APIs"], roadmap: ["Programming", "Mobile Framework", "UI Design", "APIs", "App Projects"], projects: ["To-do app", "Expense tracker app"], tech: ["Flutter / React Native", "Firebase"], careers: ["Mobile App Developer", "Android Developer"] },
+      { id: "cyber", name: "Cybersecurity", desc: "Protect systems, networks, and data from digital threats.", skills: ["Networking", "Linux", "Security Fundamentals"], roadmap: ["Networking", "Linux", "Security Fundamentals", "Cryptography", "Ethical Hacking", "Security Projects"], projects: ["Vulnerability scanner", "Network monitoring tool"], tech: ["Wireshark", "Kali Linux", "Burp Suite"], careers: ["Security Analyst", "Penetration Tester"] },
+      { id: "cloud", name: "Cloud Computing", desc: "Design and deploy scalable applications on cloud infrastructure.", skills: ["Linux", "Networking", "Cloud Fundamentals"], roadmap: ["Linux", "Networking", "Cloud Fundamentals", "AWS / Azure", "Containers", "Cloud Projects"], projects: ["Deploy a scalable web app", "Serverless API"], tech: ["AWS", "Docker", "Kubernetes"], careers: ["Cloud Engineer", "DevOps Engineer"] },
+      { id: "devops", name: "DevOps", desc: "Automate and streamline software delivery and infrastructure.", skills: ["Linux", "Git", "CI/CD", "Scripting"], roadmap: ["Linux", "Git", "CI/CD", "Containers", "Infrastructure as Code", "DevOps Projects"], projects: ["CI/CD pipeline", "Automated deployment system"], tech: ["Docker", "Jenkins", "Kubernetes", "Terraform"], careers: ["DevOps Engineer", "Site Reliability Engineer"] },
+      { id: "ai", name: "Artificial Intelligence", desc: "Apply AI techniques to build intelligent, adaptive software systems.", skills: ["Python", "Data Structures", "Machine Learning Basics"], roadmap: ["Python", "Data Structures", "Statistics", "Machine Learning", "AI Projects"], projects: ["Recommendation system", "Chatbot"], tech: ["Python", "Scikit-learn", "TensorFlow"], careers: ["AI Engineer", "ML Developer"] },
+    ],
+  },
+
+  it: {
+    intro: "Information Technology focuses on managing, securing, and scaling the systems and infrastructure that keep organizations running.",
+    industrySkills: ["Networking", "Linux", "Databases", "Troubleshooting", "Communication"],
+    recommendedTech: ["Linux", "SQL", "Cloud Basics", "Networking Tools"],
+    domains: [
+      { id: "webdev", name: "Web Development", desc: "Build and maintain web applications and internal tools.", skills: ["HTML/CSS", "JavaScript", "Database"], roadmap: ["HTML/CSS", "JavaScript", "Backend Basics", "Database", "Web Projects"], projects: ["Internal dashboard tool", "Company portal"], tech: ["JavaScript", "Node.js", "SQL"], careers: ["Web Developer", "IT Support Developer"] },
+      { id: "cloud", name: "Cloud Computing", desc: "Manage and deploy IT infrastructure using cloud platforms.", skills: ["Linux", "Networking", "Cloud Fundamentals"], roadmap: ["Linux", "Networking", "Cloud Fundamentals", "AWS / Azure", "Cloud Projects"], projects: ["Cloud file storage system", "Virtual server setup"], tech: ["AWS", "Azure", "Linux"], careers: ["Cloud Support Engineer", "Systems Administrator"] },
+      { id: "networking", name: "Networking", desc: "Design, configure, and maintain computer networks.", skills: ["Networking Fundamentals", "Protocols", "Troubleshooting"], roadmap: ["Networking Fundamentals", "Protocols", "Routing & Switching", "Network Security", "Networking Projects"], projects: ["Small office network design", "Network monitoring setup"], tech: ["Cisco Packet Tracer", "Wireshark"], careers: ["Network Engineer", "Network Administrator"] },
+      { id: "cyber", name: "Cybersecurity", desc: "Safeguard IT systems and respond to security incidents.", skills: ["Networking", "Linux", "Security Basics"], roadmap: ["Networking", "Linux", "Security Fundamentals", "Threat Detection", "Security Projects"], projects: ["Basic intrusion detection setup", "Security audit checklist tool"], tech: ["Wireshark", "Kali Linux"], careers: ["Security Analyst", "IT Security Specialist"] },
+      { id: "database", name: "Database", desc: "Design, manage, and optimize databases for applications.", skills: ["SQL", "Database Design", "Normalization"], roadmap: ["SQL", "Database Design", "Normalization", "Indexing & Optimization", "Database Projects"], projects: ["Student management database", "Inventory database system"], tech: ["MySQL", "PostgreSQL", "MongoDB"], careers: ["Database Administrator", "Data Engineer"] },
+      { id: "devops", name: "DevOps", desc: "Automate deployment and manage IT operations efficiently.", skills: ["Linux", "Scripting", "CI/CD"], roadmap: ["Linux", "Scripting", "CI/CD", "Containers", "DevOps Projects"], projects: ["Automated backup system", "CI/CD pipeline for a web app"], tech: ["Docker", "Jenkins", "Git"], careers: ["DevOps Engineer", "IT Operations Engineer"] },
+    ],
+  },
+
+  ece: {
+    intro: "Electronics & Communication Engineering bridges hardware and software — designing the chips, devices, and communication systems that power modern technology.",
+    industrySkills: ["Digital Electronics", "C Programming", "Circuit Design", "Problem Solving"],
+    recommendedTech: ["Embedded C", "Arduino / Raspberry Pi", "MATLAB", "PCB Design Tools"],
+    domains: [
+      { id: "embedded", name: "Embedded Systems", desc: "Design and program microcontroller-based systems for real-world devices.", skills: ["C Programming", "Microcontrollers", "Digital Electronics"], roadmap: ["Digital Electronics", "C Programming", "Microcontrollers", "Embedded C", "Sensors", "Embedded Project"], projects: ["Home automation system", "Smart irrigation controller"], tech: ["Arduino", "ARM", "Embedded C"], careers: ["Embedded Systems Engineer", "Firmware Developer"] },
+      { id: "vlsi", name: "VLSI", desc: "Design integrated circuits and chips at the transistor level.", skills: ["Digital Electronics", "Verilog / VHDL", "Circuit Design"], roadmap: ["Digital Electronics", "Verilog / VHDL", "Chip Design Basics", "Simulation & Testing", "VLSI Project"], projects: ["ALU design", "Simple processor simulation"], tech: ["Verilog", "VHDL", "Cadence / Xilinx tools"], careers: ["VLSI Design Engineer", "Chip Design Engineer"] },
+      { id: "iot", name: "IoT", desc: "Connect physical devices to the internet for smart, data-driven systems.", skills: ["Embedded C", "Sensors", "Networking Basics"], roadmap: ["Digital Electronics", "Embedded C", "Sensors", "Connectivity Protocols", "IoT Project"], projects: ["Smart weather station", "Connected health monitor"], tech: ["Raspberry Pi", "MQTT", "Arduino"], careers: ["IoT Engineer", "Embedded IoT Developer"] },
+      { id: "robotics", name: "Robotics", desc: "Build and program robots that sense, decide, and act.", skills: ["Embedded C", "Sensors", "Control Basics"], roadmap: ["Digital Electronics", "Embedded C", "Sensors & Actuators", "Control Systems", "Robotics Project"], projects: ["Line-following robot", "Obstacle-avoiding robot"], tech: ["Arduino", "ROS Basics", "Sensors"], careers: ["Robotics Engineer", "Automation Engineer"] },
+      { id: "comm", name: "Communication Systems", desc: "Design systems that transmit information reliably across distances.", skills: ["Signal Basics", "Analog / Digital Communication"], roadmap: ["Circuit Fundamentals", "Analog Communication", "Digital Communication", "Wireless Systems", "Communication Project"], projects: ["FM transmitter / receiver design", "Wireless link simulation"], tech: ["MATLAB", "Simulink"], careers: ["Communication Engineer", "RF Engineer"] },
+      { id: "dsp", name: "Signal Processing", desc: "Analyze and transform signals for audio, image, and sensor data.", skills: ["Mathematics", "MATLAB", "Signal Basics"], roadmap: ["Signals & Systems", "MATLAB", "Filters", "Digital Signal Processing", "DSP Project"], projects: ["Audio noise filter", "Image enhancement tool"], tech: ["MATLAB", "Python (SciPy)"], careers: ["DSP Engineer", "Signal Processing Engineer"] },
+    ],
+  },
+
+  eee: {
+    intro: "Electrical & Electronics Engineering powers the systems that generate, transmit, and control electrical energy — from the grid to electric vehicles.",
+    industrySkills: ["Circuit Analysis", "MATLAB", "Problem Solving", "Safety Standards"],
+    recommendedTech: ["MATLAB / Simulink", "PLC Software", "AutoCAD Electrical"],
+    domains: [
+      { id: "power", name: "Power Systems", desc: "Design and manage systems that generate and distribute electrical power.", skills: ["Circuit Theory", "Electrical Machines", "Power Analysis"], roadmap: ["Circuit Theory", "Electrical Machines", "Power Systems", "Protection Systems", "Power Project"], projects: ["Load flow analysis project", "Substation design study"], tech: ["MATLAB", "ETAP"], careers: ["Power Systems Engineer", "Grid Engineer"] },
+      { id: "control", name: "Control Systems", desc: "Design systems that automatically regulate and stabilize processes.", skills: ["Mathematics", "Control Theory", "MATLAB"], roadmap: ["Circuit Theory", "Control Theory", "Transfer Functions", "PID Control", "Control Project"], projects: ["Temperature control system", "Motor speed controller"], tech: ["MATLAB / Simulink", "Arduino"], careers: ["Control Systems Engineer", "Automation Engineer"] },
+      { id: "powerelec", name: "Power Electronics", desc: "Design circuits that convert and control electrical power efficiently.", skills: ["Circuit Theory", "Semiconductor Devices"], roadmap: ["Circuit Theory", "Semiconductor Devices", "Converters", "Inverters", "Power Electronics Project"], projects: ["DC-DC converter design", "Solar inverter prototype"], tech: ["MATLAB / Simulink", "PSpice"], careers: ["Power Electronics Engineer", "Design Engineer"] },
+      { id: "renewable", name: "Renewable Energy", desc: "Design systems that harness solar, wind, and other clean energy sources.", skills: ["Power Systems", "Power Electronics", "Sustainability Basics"], roadmap: ["Circuit Theory", "Power Systems", "Solar / Wind Systems", "Grid Integration", "Renewable Project"], projects: ["Solar power system design", "Off-grid renewable setup"], tech: ["PVsyst", "MATLAB"], careers: ["Renewable Energy Engineer", "Solar Systems Engineer"] },
+      { id: "ev", name: "Electric Vehicles", desc: "Design the electrical systems that power and control electric vehicles.", skills: ["Power Electronics", "Control Systems", "Battery Basics"], roadmap: ["Circuit Theory", "Power Electronics", "Motor Drives", "Battery Management", "EV Project"], projects: ["EV motor controller design", "Battery management system model"], tech: ["MATLAB / Simulink", "Battery simulation tools"], careers: ["EV Systems Engineer", "Powertrain Engineer"] },
+      { id: "automation", name: "Automation", desc: "Design automated control systems for industrial processes.", skills: ["Control Systems", "PLC Programming", "Sensors"], roadmap: ["Control Systems", "PLC Basics", "SCADA", "Industrial Automation", "Automation Project"], projects: ["Automated conveyor system", "PLC-based process control"], tech: ["PLC Software", "SCADA Tools"], careers: ["Automation Engineer", "Industrial Controls Engineer"] },
+    ],
+  },
+
+  mech: {
+    intro: "Mechanical Engineering combines design, manufacturing, and automation to build the machines and systems that shape the physical world.",
+    industrySkills: ["Engineering Drawing", "Problem Solving", "Material Science", "Teamwork"],
+    recommendedTech: ["AutoCAD", "SolidWorks", "ANSYS", "CNC Software"],
+    domains: [
+      { id: "cadcam", name: "CAD/CAM", desc: "Design and manufacture parts using computer-aided tools.", skills: ["Engineering Drawing", "AutoCAD", "SolidWorks"], roadmap: ["Engineering Drawing", "AutoCAD", "SolidWorks", "CAM Basics", "CAD/CAM Project"], projects: ["3D model of a mechanical part", "CNC toolpath design"], tech: ["AutoCAD", "SolidWorks", "Mastercam"], careers: ["CAD Designer", "Manufacturing Engineer"] },
+      { id: "design", name: "Mechanical Design", desc: "Design mechanical components and systems for real-world applications.", skills: ["Engineering Drawing", "Material Science", "Design Analysis"], roadmap: ["Engineering Drawing", "SolidWorks", "Design Analysis", "Material Selection", "Design Project"], projects: ["Machine component redesign", "Product design prototype"], tech: ["SolidWorks", "ANSYS"], careers: ["Design Engineer", "Product Development Engineer"] },
+      { id: "manufacturing", name: "Manufacturing", desc: "Plan and optimize processes that turn designs into physical products.", skills: ["Manufacturing Processes", "Quality Control", "CAD Basics"], roadmap: ["Engineering Drawing", "Manufacturing Processes", "Quality Control", "Automation Basics", "Manufacturing Project"], projects: ["Process optimization study", "Production line layout design"], tech: ["CAD Tools", "Lean Manufacturing Basics"], careers: ["Manufacturing Engineer", "Production Engineer"] },
+      { id: "robotics", name: "Robotics", desc: "Design and build mechanical robots for industrial and research use.", skills: ["Mechanics", "Control Basics", "CAD"], roadmap: ["Engineering Mechanics", "CAD", "Control Basics", "Robotics Fundamentals", "Robotics Project"], projects: ["Robotic arm prototype", "Autonomous mobile robot"], tech: ["SolidWorks", "Arduino", "ROS Basics"], careers: ["Robotics Engineer", "Mechatronics Engineer"] },
+      { id: "automotive", name: "Automotive", desc: "Design and analyze systems used in vehicles and transportation.", skills: ["Thermodynamics", "CAD", "Material Science"], roadmap: ["Engineering Mechanics", "Thermodynamics", "CAD", "Vehicle Dynamics", "Automotive Project"], projects: ["Engine performance analysis", "Chassis design study"], tech: ["SolidWorks", "ANSYS"], careers: ["Automotive Engineer", "Vehicle Design Engineer"] },
+      { id: "cnc", name: "CNC", desc: "Program and operate computer-controlled machining systems.", skills: ["Manufacturing", "CAM Software", "Precision Machining"], roadmap: ["Engineering Drawing", "CAD", "CAM Basics", "CNC Programming", "CNC Project"], projects: ["CNC-machined component", "Toolpath optimization project"], tech: ["Mastercam", "CNC Simulators"], careers: ["CNC Programmer", "Machining Engineer"] },
+      { id: "indauto", name: "Industrial Automation", desc: "Automate manufacturing processes using control systems and robotics.", skills: ["Control Basics", "PLC", "Manufacturing Processes"], roadmap: ["Manufacturing Processes", "Control Basics", "PLC Basics", "Industrial Robotics", "Automation Project"], projects: ["Automated assembly line model", "PLC-controlled machine demo"], tech: ["PLC Software", "SCADA Basics"], careers: ["Automation Engineer", "Industrial Engineer"] },
+    ],
+  },
+
+  civil: {
+    intro: "Civil Engineering designs and builds the infrastructure that shapes our cities — from buildings and bridges to transportation and water systems.",
+    industrySkills: ["Engineering Drawing", "Surveying", "Project Management", "Safety Standards"],
+    recommendedTech: ["AutoCAD", "STAAD Pro", "Revit / BIM Tools", "MS Project"],
+    domains: [
+      { id: "structural", name: "Structural Engineering", desc: "Design safe, stable structures such as buildings and bridges.", skills: ["Structural Analysis", "AutoCAD", "Material Science"], roadmap: ["Engineering Drawing", "Structural Analysis", "AutoCAD", "STAAD Pro", "Structural Project"], projects: ["Building structural design", "Bridge load analysis"], tech: ["STAAD Pro", "AutoCAD", "ETABS"], careers: ["Structural Engineer", "Design Engineer"] },
+      { id: "constrmgmt", name: "Construction Management", desc: "Plan, coordinate, and oversee construction projects from start to finish.", skills: ["Project Management", "Cost Estimation", "Scheduling"], roadmap: ["Engineering Drawing", "Construction Materials", "Cost Estimation", "Project Scheduling", "Construction Project"], projects: ["Construction project schedule plan", "Cost estimation report"], tech: ["MS Project", "Primavera"], careers: ["Construction Manager", "Site Engineer"] },
+      { id: "transport", name: "Transportation", desc: "Design and plan roads, transit systems, and traffic infrastructure.", skills: ["Surveying", "Traffic Analysis", "AutoCAD"], roadmap: ["Surveying", "Transportation Basics", "Traffic Analysis", "Highway Design", "Transportation Project"], projects: ["Road geometric design", "Traffic flow study"], tech: ["AutoCAD Civil 3D", "Traffic simulation tools"], careers: ["Transportation Engineer", "Traffic Planner"] },
+      { id: "geotech", name: "Geotechnical Engineering", desc: "Study soil and foundation behavior to support safe construction.", skills: ["Soil Mechanics", "Surveying", "Structural Basics"], roadmap: ["Engineering Mechanics", "Soil Mechanics", "Foundation Design", "Geotechnical Testing", "Geotechnical Project"], projects: ["Soil bearing capacity study", "Foundation design project"], tech: ["AutoCAD", "Geotechnical software"], careers: ["Geotechnical Engineer", "Foundation Engineer"] },
+      { id: "environ", name: "Environmental Engineering", desc: "Design systems that protect water, air, and environmental quality.", skills: ["Environmental Science", "Water Treatment Basics"], roadmap: ["Engineering Mechanics", "Environmental Science", "Water Treatment", "Waste Management", "Environmental Project"], projects: ["Water treatment plant design study", "Waste management plan"], tech: ["AutoCAD", "Environmental modeling tools"], careers: ["Environmental Engineer", "Sustainability Engineer"] },
+      { id: "bim", name: "BIM", desc: "Use digital models to plan, design, and manage building projects.", skills: ["AutoCAD", "3D Modeling", "Project Coordination"], roadmap: ["Engineering Drawing", "AutoCAD", "Revit / BIM Basics", "BIM Coordination", "BIM Project"], projects: ["3D building information model", "BIM coordination study"], tech: ["Revit", "Navisworks"], careers: ["BIM Engineer", "BIM Coordinator"] },
+      { id: "urban", name: "Urban Planning", desc: "Plan the layout and development of cities and communities.", skills: ["Surveying", "Land Use Planning", "GIS Basics"], roadmap: ["Surveying", "Urban Planning Basics", "GIS", "Land Use Design", "Urban Planning Project"], projects: ["Neighborhood layout plan", "Land use mapping project"], tech: ["GIS Software", "AutoCAD"], careers: ["Urban Planner", "City Planning Engineer"] },
+    ],
+  },
+};
+
+/* ---------------------------------------------------------------------- *
+ * 5. DEPARTMENT PAGE (department.html)
+ * ---------------------------------------------------------------------- */
+function renderDepartmentPage() {
+  const introEl = document.getElementById('deptIntroText');
+  if (!introEl) return; // not on department.html
+
+  const deptKey = getActiveRoadmapKey();
+  const meta = DEPARTMENT_ROADMAPS[deptKey];
+  const extra = DEPARTMENT_DOMAINS[deptKey];
+  const profile = getStudentProfile();
+
+  document.getElementById('deptPageTitle').textContent = meta.label;
+  introEl.innerHTML = extra.intro + (!profile ? ' <span class="ev-badge demo ms-1"><i class="bi bi-cpu"></i> Demo Profile</span>' : '');
+
+  /* base roadmap overview as an inline arrow chain */
+  const roadmapWrap = document.getElementById('deptBaseRoadmap');
+  roadmapWrap.innerHTML = meta.stages.map((stage, i) => {
+    const chip = `<span class="ev-chip">${stage}</span>`;
+    return i < meta.stages.length - 1 ? chip + ' <i class="bi bi-arrow-right text-muted-ev"></i> ' : chip;
+  }).join('');
+
+  /* industry skills + recommended technologies */
+  document.getElementById('deptIndustrySkills').innerHTML = extra.industrySkills.map(s => `<span class="ev-chip have">${s}</span>`).join('');
+  document.getElementById('deptRecommendedTech').innerHTML = extra.recommendedTech.map(t => `<span class="ev-chip">${t}</span>`).join('');
+
+  /* domain selection grid */
+  const profileDomain = profile && profile.domain;
+  const grid = document.getElementById('deptDomainGrid');
+  grid.innerHTML = extra.domains.map(d => `
+    <div class="col-md-6 col-lg-4">
+      <div class="ev-card ev-card-pad hoverable h-100 d-flex flex-column ${d.id === profileDomain ? 'border-selected' : ''}" style="${d.id === profileDomain ? 'border-color:var(--ev-indigo); box-shadow:var(--shadow-lg);' : ''}">
+        <div class="ev-icon-tile mb-3"><i class="bi bi-diagram-3"></i></div>
+        <h6 class="mb-1">${d.name}</h6>
+        <p class="text-muted-ev small mb-3">${d.desc}</p>
+        <button class="btn-ev-outline mt-auto explore-domain-btn" data-domain="${d.id}">
+          ${d.id === profileDomain ? '<i class="bi bi-check2-circle me-1"></i> Selected — View Details' : 'Explore Domain'}
+        </button>
+      </div>
     </div>
-  </div>
-  <div class="col-6 col-lg-3">
-    <div class="ev-card ev-card-pad h-100">
-      <div class="d-flex justify-content-between align-items-start">
+  `).join('');
+
+  /* auto-open detail if the student already chose a domain */
+  if (profileDomain && extra.domains.some(d => d.id === profileDomain)) {
+    renderDomainDetail(deptKey, profileDomain);
+  }
+}
+
+function renderDomainDetail(deptKey, domainId) {
+  const extra = DEPARTMENT_DOMAINS[deptKey];
+  const domain = extra.domains.find(d => d.id === domainId);
+  const detail = document.getElementById('deptDomainDetail');
+  if (!domain || !detail) return;
+
+  const journeyHtml = domain.roadmap.map((stage, i) => `
+    <div class="journey-node" data-sem="${i + 1}">
+      <div class="ev-card ev-card-pad" style="box-shadow:none; background:var(--bg-sunken);">
+        <h6 class="mb-0">${stage}</h6>
+      </div>
+    </div>
+  `).join('');
+
+  detail.classList.remove('d-none');
+  detail.innerHTML = `
+    <div class="ev-card ev-card-pad mb-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
         <div>
-          <div class="text-muted-ev small mb-1">Attendance</div>
-          <div class="ev-stat-value" data-student="attendance">87%</div>
-        </div>
-        <div class="ev-icon-tile" style="width:40px;height:40px;font-size:1rem;"><i class="bi bi-calendar-check"></i></div>
-      </div>
-      <div class="ev-progress mt-3"><div class="ev-progress-bar" style="width:87%;"></div></div>
-    </div>
-  </div>
-  <div class="col-6 col-lg-3">
-    <div class="ev-card ev-card-pad h-100">
-      <div class="d-flex justify-content-between align-items-start">
-        <div>
-          <div class="text-muted-ev small mb-1">Career Readiness</div>
-          <div class="ev-stat-value">74%</div>
-        </div>
-        <div class="ev-icon-tile" style="width:40px;height:40px;font-size:1rem;"><i class="bi bi-briefcase"></i></div>
-      </div>
-      <div class="ev-progress mt-3"><div class="ev-progress-bar" style="width:74%;"></div></div>
-    </div>
-  </div>
-  <div class="col-6 col-lg-3">
-    <div class="ev-card ev-card-pad h-100">
-      <div class="d-flex justify-content-between align-items-start">
-        <div>
-          <div class="text-muted-ev small mb-1">Learning Progress</div>
-          <div class="ev-stat-value">61%</div>
-        </div>
-        <div class="ev-icon-tile" style="width:40px;height:40px;font-size:1rem;"><i class="bi bi-diagram-3"></i></div>
-      </div>
-      <div class="ev-progress mt-3"><div class="ev-progress-bar" style="width:61%;"></div></div>
-    </div>
-  </div>
-</div>
-
-<div class="row g-3">
-  <!-- Chart -->
-  <div class="col-lg-7">
-    <div class="ev-card ev-card-pad h-100">
-      <div class="d-flex justify-content-between align-items-start mb-3">
-        <div>
-          <h6 class="mb-1">Academic Performance</h6>
-          <p class="text-muted-ev small mb-0">Previous semesters vs. AI-predicted trend</p>
-        </div>
-        <span class="ev-badge demo"><i class="bi bi-cpu"></i> Demo Prediction</span>
-      </div>
-      <canvas id="dashboardChart" height="190"></canvas>
-    </div>
-  </div>
-
-  <!-- Career recommendation -->
-  <div class="col-lg-5">
-    <div class="ev-card ev-card-pad h-100 d-flex flex-column">
-      <span class="ev-badge mb-3" style="align-self:flex-start;"><i class="bi bi-stars"></i> Recommended Career</span>
-      <div class="d-flex align-items-center gap-3 mb-3">
-        <div class="ev-icon-tile"><i class="bi bi-robot"></i></div>
-        <div>
-          <h5 class="mb-0">Machine Learning Engineer</h5>
-          <div class="text-muted-ev small">89% profile match (demo)</div>
+          <span class="ev-badge mb-2"><i class="bi bi-stars"></i> Selected Domain</span>
+          <h4 class="mb-1">${domain.name}</h4>
+          <p class="text-muted-ev mb-0">${domain.desc}</p>
         </div>
       </div>
-      <p class="text-muted-ev small">Based on your Python and Statistics scores plus your stated career interest, this path fits you best right now.</p>
-      <a href="career.html" class="btn-ev-outline mt-auto align-self-start">View Career Path <i class="bi bi-arrow-right"></i></a>
-    </div>
-  </div>
-</div>
 
-<!-- Aptitude summary card -->
-<div class="ev-card ev-card-pad mt-3" id="dashboardAptitudeCard">
-  <!-- filled by script.js -->
-</div>
-
-<!-- Department Roadmap -->
-<div class="ev-card ev-card-pad mt-3" id="departmentRoadmapCard">
-  <!-- filled by department.js -->
-</div>
-
-<!-- Recommended next steps -->
-<div class="ev-card ev-card-pad mt-3">
-  <h6 class="mb-3"><i class="bi bi-check2-square me-2"></i>Recommended Next Steps</h6>
-  <div class="row g-3">
-    <div class="col-md-6 col-lg-3">
-      <div class="ev-card ev-card-pad hoverable h-100" style="box-shadow:none; background:var(--bg-sunken);">
-        <span class="font-mono text-muted-ev small">01</span>
-        <div class="fw-semibold mt-1">Improve Statistics</div>
+      <div class="row g-3 mb-4">
+        <div class="col-md-6">
+          <h6 class="small text-uppercase text-muted-ev mb-2">Required Skills</h6>
+          <div class="d-flex flex-wrap gap-2">${domain.skills.map(s => `<span class="ev-chip have">${s}</span>`).join('')}</div>
+        </div>
+        <div class="col-md-6">
+          <h6 class="small text-uppercase text-muted-ev mb-2">Technologies to Learn</h6>
+          <div class="d-flex flex-wrap gap-2">${domain.tech.map(t => `<span class="ev-chip">${t}</span>`).join('')}</div>
+        </div>
       </div>
-    </div>
-    <div class="col-md-6 col-lg-3">
-      <div class="ev-card ev-card-pad hoverable h-100" style="box-shadow:none; background:var(--bg-sunken);">
-        <span class="font-mono text-muted-ev small">02</span>
-        <div class="fw-semibold mt-1">Complete Python Module</div>
-      </div>
-    </div>
-    <div class="col-md-6 col-lg-3">
-      <div class="ev-card ev-card-pad hoverable h-100" style="box-shadow:none; background:var(--bg-sunken);">
-        <span class="font-mono text-muted-ev small">03</span>
-        <div class="fw-semibold mt-1">Practice ML Quiz</div>
-      </div>
-    </div>
-    <div class="col-md-6 col-lg-3">
-      <div class="ev-card ev-card-pad hoverable h-100" style="box-shadow:none; background:var(--bg-sunken);">
-        <span class="font-mono text-muted-ev small">04</span>
-        <div class="fw-semibold mt-1">Build One ML Project</div>
-      </div>
-    </div>
-  </div>
-</div>
-  </div>
-</main>
-</div>
 
-<nav class="ev-bottom-nav">
-  <a href="dashboard.html" class="item active"><i class="bi bi-grid-1x2-fill"></i>Home</a>
-  <a href="performance.html" class="item "><i class="bi bi-graph-up-arrow"></i>Perform</a>
-  <a href="career.html" class="item "><i class="bi bi-briefcase-fill"></i>Career</a>
-  <a href="learning-dna.html" class="item "><i class="bi bi-diagram-3-fill"></i>DNA</a>
-  <a href="senior-blueprint.html" class="item "><i class="bi bi-people-fill"></i>Seniors</a>
-  <a href="profile.html" class="item "><i class="bi bi-person-circle"></i>Profile</a>
-</nav>
+      <h6 class="small text-uppercase text-muted-ev mb-3">Beginner → Advanced Roadmap</h6>
+      <div class="journey-track mb-4">${journeyHtml}</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script src="script.js"></script>
-<script src="department.js"></script>
+      <div class="row g-3 mb-4">
+        <div class="col-md-6">
+          <h6 class="small text-uppercase text-muted-ev mb-2">Recommended Projects</h6>
+          <ul class="list-unstyled small mb-0">
+            ${domain.projects.map(p => `<li class="d-flex gap-2 mb-1"><i class="bi bi-kanban text-primary mt-1"></i>${p}</li>`).join('')}
+          </ul>
+        </div>
+        <div class="col-md-6">
+          <h6 class="small text-uppercase text-muted-ev mb-2">Career Options</h6>
+          <div class="d-flex flex-wrap gap-2">${domain.careers.map(c => `<span class="ev-chip have">${c}</span>`).join('')}</div>
+        </div>
+      </div>
 
-</body>
-</html>
+      <button class="btn-ev-primary" id="continueToDashboardBtn" data-domain="${domain.id}">
+        <i class="bi bi-arrow-right-circle me-2"></i>Select This Domain &amp; Continue to Dashboard
+      </button>
+    </div>
+  `;
+  detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+document.addEventListener('DOMContentLoaded', renderDepartmentPage);
+
+document.addEventListener('click', (e) => {
+  const exploreBtn = e.target.closest('.explore-domain-btn');
+  if (exploreBtn) {
+    const deptKey = getActiveRoadmapKey();
+    renderDomainDetail(deptKey, exploreBtn.getAttribute('data-domain'));
+  }
+
+  const continueBtn = e.target.closest('#continueToDashboardBtn');
+  if (continueBtn) {
+    const deptKey = getActiveRoadmapKey();
+    const domainId = continueBtn.getAttribute('data-domain');
+    const domain = DEPARTMENT_DOMAINS[deptKey].domains.find(d => d.id === domainId);
+
+    /* Merge into the existing profile, or start a lightweight demo profile
+       if the student is just browsing without having registered. */
+    let profile = getStudentProfile();
+    if (!profile) {
+      profile = { department: DEPARTMENT_ROADMAPS[deptKey].label, roadmap: deptKey };
+    }
+    profile.domain = domainId;
+    profile.domainLabel = domain ? domain.name : domainId;
+    saveStudentProfile(profile);
+
+    window.location.href = 'dashboard.html';
+  }
+});
